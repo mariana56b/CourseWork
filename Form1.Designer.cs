@@ -55,7 +55,7 @@
             this.btnDrawingPointsCircle.Name = "btnDrawingPointsCircle";
             this.btnDrawingPointsCircle.Size = new System.Drawing.Size(600, 44);
             this.btnDrawingPointsCircle.TabIndex = 2;
-            this.btnDrawingPointsCircle.Text = "Виведення точок та кола";
+            this.btnDrawingPointsCircle.Text = "Вивести коло та точки";
             this.btnDrawingPointsCircle.UseVisualStyleBackColor = true;
             this.btnDrawingPointsCircle.Click += new System.EventHandler(this.btnDrawingPointsCircle_Click);
             // 

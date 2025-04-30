@@ -1,44 +1,63 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 
 namespace CourseWork
 {
     public class AngleSearchAlgorithm : IPolygonFinderAlgorithm
     {
+        // Допустима похибка по дузі (arc length): 0.5 пікселя
+        private double GetAngularTolerance(double radius) => 0.5 / radius;
+        private double Normalize(double angle)
+        {
+            while (angle <= -Math.PI) angle += 2 * Math.PI;
+            while (angle > Math.PI) angle -= 2 * Math.PI;
+            return angle;
+        }
+
         public List<Point> FindPolygon(Circle circle, List<Point> points, int sides)
         {
-            List<Point> polygon = new List<Point>();
-            List<double> angles = points.Select(p => Math.Atan2(p.Y - circle.Center.Y, p.X - circle.Center.X)).ToList();
-            angles.Sort();
-            double angleIncrement = 2 * Math.PI / sides;
+            var tol = GetAngularTolerance(circle.Radius);
+            double inc = 2 * Math.PI / sides;
 
-            for (int i = 0; i < sides; i++)
+            var pointAngles = points
+                .Select(p => new {
+                    P = p,
+                    Angle = Math.Atan2(p.Y - circle.Center.Y, p.X - circle.Center.X)
+                })
+                .ToList();
+
+            foreach (var start in pointAngles)
             {
-                double targetAngle = i * angleIncrement;
-                Point closestPoint = null;
-                double smallestDifference = double.MaxValue;
+                var polygon = new List<Point>();
+                bool ok = true;
 
-                foreach (var point in points)
+                for (int k = 0; k < sides; k++)
                 {
-                    double pointAngle = Math.Atan2(point.Y - circle.Center.Y, point.X - circle.Center.X);
-                    double angleDifference = Math.Abs(targetAngle - pointAngle);
-                    if (angleDifference < smallestDifference)
+                    double target = Normalize(start.Angle + k * inc);
+
+                    var best = pointAngles
+                        .Select(pa => new {
+                            pa.P,
+                            Delta = Math.Abs(Normalize(pa.Angle - target))
+                        })
+                        .OrderBy(x => x.Delta)
+                        .First();
+
+                    if (best.Delta <= tol)
+                        polygon.Add(best.P);
+                    else
                     {
-                        smallestDifference = angleDifference;
-                        closestPoint = point;
+                        ok = false;
+                        break;
                     }
                 }
 
-                if (closestPoint != null && smallestDifference < 0.5)
-                {
-                    polygon.Add(closestPoint);
-                }
+                if (ok && polygon.Count == sides)
+                    return polygon;
             }
 
-            return polygon.Count == sides ? polygon : new List<Point>();
+            return new List<Point>();
         }
     }
 }
