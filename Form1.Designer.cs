@@ -45,6 +45,7 @@
             this.tbxResult.Margin = new System.Windows.Forms.Padding(3, 4, 3, 4);
             this.tbxResult.Multiline = true;
             this.tbxResult.Name = "tbxResult";
+            this.tbxResult.ScrollBars = System.Windows.Forms.ScrollBars.Vertical;
             this.tbxResult.Size = new System.Drawing.Size(357, 537);
             this.tbxResult.TabIndex = 0;
             // 
