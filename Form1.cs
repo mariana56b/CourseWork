@@ -14,6 +14,7 @@ namespace CourseWork
     public partial class PolygonInCircleFinder : Form
     {
         private Circle circle;
+        private int _sampleSize = 150;
 
         private List<Point> allPoints;
         private List<Point> points;
@@ -37,7 +38,6 @@ namespace CourseWork
             // 2) Зробити початкову вибірку
             SamplePoints();
 
-            // 3) Підписатися на Paint
             pResult.Paint += pResult_Paint;
 
             _showData = false;
@@ -82,29 +82,69 @@ namespace CourseWork
 
         private void btnDrawingPointsCircle_Click(object sender, EventArgs e)
         {
-            // 1) Попросити користувача ввести n для гарантованого n-кутника
-            string input = Interaction.InputBox(
-                "Який n-кутник гарантувати в наборі точок? (ціле ≥ 3)",
-                "Гарантувати n-кутник",
-                "5");
-            if (!int.TryParse(input, out int guaranteedN) || guaranteedN < 3)
+            // 1) Запитати, скільки точок показати
+            string inputSize = Interaction.InputBox(
+                $"Скільки випадкових точок вивести на екран? (від 3 до {allPoints.Count})",
+                "Кількість точок",
+                _sampleSize.ToString());
+
+            if (!int.TryParse(inputSize, out var nPoints) || nPoints < 3 || nPoints > allPoints.Count)
             {
-                MessageBox.Show("Введіть ціле число ≥ 3", "Помилка", MessageBoxButtons.OK, MessageBoxIcon.Warning);
+                MessageBox.Show(
+                    $"Невірне значення. Введіть ціле число від 3 до {allPoints.Count}.",
+                    "Помилка вводу",
+                    MessageBoxButtons.OK,
+                    MessageBoxIcon.Warning);
+                return;
+            }
+            _sampleSize = nPoints;
+
+            // 2) Запитати, який n‑кутник гарантувати
+            string inputN = Interaction.InputBox(
+                $"Який n‑кутник додати в набір точок? (ціле ≥ 3 та ≤ {_sampleSize})",
+                "Гарантування n‑кутника",
+                "3");
+
+            if (!int.TryParse(inputN, out var guaranteedN)
+                || guaranteedN < 3
+                || guaranteedN > _sampleSize)
+            {
+                MessageBox.Show(
+                    $"Невірне значення n‑кутника. Має бути ціле від 3 до {_sampleSize}.",
+                    "Помилка вводу",
+                    MessageBoxButtons.OK,
+                    MessageBoxIcon.Warning);
                 return;
             }
 
-            // 2) Оновити підмножину: випадкова + гарантовані вершини
+            // 3) Формуємо підмножину — спочатку випадкові _sampleSize_ точок...
             points = new List<Point>(allPoints);
             SamplePoints();
+
+            // ...а потім додамо вершини гарантованого n‑кутника:
             EnsureRegularPolygonVertices(guaranteedN);
 
-            // 3) Показати коло й точки
+            // 4) Показати коло й точки
             _showData = true;
             _showPolygons = false;
             allPolygons.Clear();
             pResult.Invalidate();
 
-            tbxResult.Text = $"Нова вибірка + гарантований {guaranteedN}-кутник додано.";
+            tbxResult.Text = $"Відображено {_sampleSize} випадкових точок + гарантований {guaranteedN}-кутник.";
+        }
+        private void SamplePoints()
+        {
+            if (allPoints == null) return;
+            if (allPoints.Count <= _sampleSize)
+                points = new List<Point>(allPoints);
+            else
+            {
+                var rnd = new Random();
+                points = allPoints
+                    .OrderBy(_ => rnd.Next())
+                    .Take(_sampleSize)
+                    .ToList();
+            }
         }
 
         private void btnPrintN_Gons_Click(object sender, EventArgs e)
@@ -170,9 +210,7 @@ namespace CourseWork
             }
         }
 
-        /// <summary>
         /// Читає з текстового файлу circle + allPoints.
-        /// </summary>
         private void LoadDataFromFile(string filePath)
         {
             allPoints = new List<Point>();
@@ -211,21 +249,6 @@ namespace CourseWork
 
             circle = new Circle(new Point(cx, cy), r);
         }
-
-        /// Перемішує allPoints та бере перші 150
-        private void SamplePoints()
-        {
-            if (allPoints.Count <= 150)
-            {
-                points = new List<Point>(allPoints);
-            }
-            else
-            {
-                var rnd = new Random();
-                points = allPoints.OrderBy(_ => rnd.Next()).Take(150).ToList();
-            }
-        }
-
         /// Додає у points вершини правильного n-кутника (для гарантії, що алгоритм його знайде)
         private void EnsureRegularPolygonVertices(int n)
         {

@@ -14,7 +14,6 @@ namespace CourseWork
             while (angle > Math.PI) angle -= 2 * Math.PI;
             return angle;
         }
-
         public List<Point> FindPolygon(Circle circle, List<Point> points, int sides)
         {
             var tol = GetAngularTolerance(circle.Radius);
